@@ -26,174 +26,8 @@ const soltuxDisplay = document.getElementById('soltux-display');
 const soltuxInput = document.getElementById('soltux-input');
 
 // ═══════════════════════════════════════════════════════════════
-//  SISTEMA DE AUTO-CORREÇÃO E SUGESTÕES
+//  SISTEMA DE RUNTIME
 // ═══════════════════════════════════════════════════════════════
-const SOL_KEYWORDS = [
-    'create', 'set', 'execute', 'break', 'if', 'then', 'else', 
-    'loop', 'repeat', 'foreach', 'importService', 'stoploop', 
-    'nextloop', 'function', 'return', 'delete', 'times', 'in',
-    'not', 'to', 'of', 'at', 'push', 'remove', 'from'
-];
-
-const SOL_FUNCTIONS = [
-    'log', 'print', 'error', 'warn', 'success', 'wait', 'clear',
-    'checkconsole', 'rng', 'random', 'math', 'input', 'alert',
-    'array', 'object', 'length', 'shuffle', 'pick', 'range'
-];
-
-const COMMON_MISTAKES = {
-    '==': '=',
-    '===': '=',
-    '!=': 'not ... =',
-    '!==': 'not ... =',
-    'var': 'create',
-    'let': 'create',
-    'const': 'create',
-    'function': 'create function',
-    'for': 'repeat ... times or foreach',
-    'while': 'loop',
-    'console.log': 'log',
-    'print': 'log'
-};
-
-// Calcula distância de Levenshtein para encontrar palavras similares
-function levenshteinDistance(a, b) {
-    const matrix = [];
-    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
-    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
-    
-    for (let i = 1; i <= b.length; i++) {
-        for (let j = 1; j <= a.length; j++) {
-            if (b.charAt(i - 1) === a.charAt(j - 1)) {
-                matrix[i][j] = matrix[i - 1][j - 1];
-            } else {
-                matrix[i][j] = Math.min(
-                    matrix[i - 1][j - 1] + 1,
-                    matrix[i][j - 1] + 1,
-                    matrix[i - 1][j] + 1
-                );
-            }
-        }
-    }
-    return matrix[b.length][a.length];
-}
-
-// Encontra a keyword mais próxima
-function findClosestKeyword(word) {
-    const allWords = [...SOL_KEYWORDS, ...SOL_FUNCTIONS];
-    let closest = null;
-    let minDistance = Infinity;
-    
-    for (const keyword of allWords) {
-        const distance = levenshteinDistance(word.toLowerCase(), keyword.toLowerCase());
-        if (distance < minDistance && distance <= 3) {
-            minDistance = distance;
-            closest = keyword;
-        }
-    }
-    return { keyword: closest, distance: minDistance };
-}
-
-// Analisa o código e gera sugestões
-function analyzeCodeForSuggestions(code) {
-    const lines = code.split('\n');
-    const suggestions = [];
-    const blockStack = [];
-    
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        const lineNum = i + 1;
-        
-        if (!line || line.startsWith('--') || line.startsWith('//')) continue;
-        
-        if (
-            /\bcreate\s+function\b/i.test(line) ||
-            /\bset\s+function\b/i.test(line) ||
-            /\bif\b.*\bthen\b/i.test(line) ||
-            /\belse\b/i.test(line) ||
-            /\bloop\b/i.test(line) ||
-            /\brepeat\b.*\btimes\b/i.test(line) ||
-            /\bforeach\b/i.test(line)
-        ) {
-            blockStack.push({ type: 'block', line: lineNum });
-        }
-        
-        if (/^\s*\bbreak\b\s*$/i.test(line)) {
-            if (blockStack.length > 0) blockStack.pop();
-        }
-        
-        if (/\b==\b/.test(line) || /\b===\b/.test(line)) {
-            suggestions.push({
-                line: lineNum,
-                type: 'operator',
-                message: `Na SOL, use '=' em vez de '${line.includes('===') ? '===' : '=='}' para comparação`
-            });
-        }
-        
-        if (/\b!=\b/.test(line) || /\b!==\b/.test(line)) {
-            suggestions.push({
-                line: lineNum,
-                type: 'operator',
-                message: `Na SOL, use 'if not x = y then' em vez de '${line.includes('!==') ? '!==' : '!='}'`
-            });
-        }
-        
-        const words = line.match(/\b[a-zA-Z_]\w*\b/g) || [];
-        for (const word of words) {
-            if (word.length < 3 || /^\d+$/.test(word)) continue;
-            
-            const isKnown = [...SOL_KEYWORDS, ...SOL_FUNCTIONS].some(
-                kw => kw.toLowerCase() === word.toLowerCase()
-            );
-            
-            if (!isKnown) {
-                const { keyword, distance } = findClosestKeyword(word);
-                if (keyword && distance <= 2) {
-                    suggestions.push({
-                        line: lineNum,
-                        type: 'typo',
-                        message: `'${word}' não reconhecido. Você quis dizer '${keyword}'?`
-                    });
-                }
-            }
-        }
-        
-        if (/\bvar\b|\blet\b|\bconst\b/.test(line)) {
-            suggestions.push({ line: lineNum, type: 'syntax', message: "Na SOL, use 'create' em vez de 'var/let/const'" });
-        }
-        if (/\bfunction\s+\w+/.test(line) && !/\bcreate\s+function\b/.test(line)) {
-            suggestions.push({ line: lineNum, type: 'syntax', message: "Na SOL, use 'create function Nome' em vez de 'function Nome'" });
-        }
-        if (/\bconsole\.log\b/.test(line)) {
-            suggestions.push({ line: lineNum, type: 'syntax', message: "Na SOL, use 'log()' em vez de 'console.log()'" });
-        }
-    }
-    
-    if (blockStack.length > 0) {
-        const unclosed = blockStack[blockStack.length - 1];
-        suggestions.push({
-            line: unclosed.line,
-            type: 'block',
-            message: `Bloco aberto na linha ${unclosed.line} não foi fechado com 'break'`
-        });
-    }
-    return suggestions;
-}
-
-function showSuggestions(suggestions) {
-    if (suggestions.length === 0) return;
-    log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "#ffeb3b");
-    log("💡 SUGESTÕES DE CORREÇÃO:", "#ffeb3b");
-    log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "#ffeb3b");
-    for (const suggestion of suggestions) {
-        const icon = suggestion.type === 'typo' ? '📝' : 
-                     suggestion.type === 'operator' ? '⚠️' : 
-                     suggestion.type === 'block' ? '🔧' : '💬';
-        log(`${icon} Linha ${suggestion.line}: ${suggestion.message}`, "#ffeb3b");
-    }
-    log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n", "#ffeb3b");
-}
-
 class SolRuntime {
     constructor() {
         this.variables = new Map();
@@ -279,7 +113,6 @@ function showSyntaxHelp() {
     terminalPrint("═══════════════════════════════════════════════════════════", "#00ffff");
     terminalPrint("                    SOL SYNTAX REFERENCE                    ", "#fff");
     terminalPrint("═══════════════════════════════════════════════════════════", "#00ffff");
-    // [Resumo dos comandos aqui - mantido igual]
     terminalPrint("┌─ VARIÁVEIS ─────────────────────────────────────────────┐", "#00bcd4");
     terminalPrint("│ create name              → Declara variável             │", "#fff");
     terminalPrint("│ create name = value      → Declara e atribui            │", "#fff");
@@ -305,7 +138,7 @@ async function importService(name) {
     }
 
     try {
-        const response = await fetch(`${PROXY_URL}${name}`);
+        const response = await fetch(`${PROXY_URL}${encodeURIComponent(name)}`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const code = await response.text();
         const scriptTag = document.createElement('script');
@@ -321,7 +154,7 @@ async function importService(name) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  TRANSPILADOR SOL → JAVASCRIPT COM CONTROLE E ESCUDO DINÂMICO
+//  TRANSPILADOR SOL → JAVASCRIPT (SEGURO E OTIMIZADO)
 // ═══════════════════════════════════════════════════════════════
 async function runSol() {
     currentExecutionId++;
@@ -336,9 +169,6 @@ async function runSol() {
     switchTab('console');
     logOutput.innerHTML = "";
     log("🚀 Execution started...", "#2196f3");
-    
-    const suggestions = analyzeCodeForSuggestions(code);
-    if (suggestions.length > 0) showSuggestions(suggestions);
 
     // ── 1. Remove comentários ──────────────
     code = code.replace(/--.*$/gm, "");
@@ -351,12 +181,10 @@ async function runSol() {
     
     for (const match of importMatches) {
         const libName = match[1];
-        await importService(libName); // Carrega a lib no navegador
+        await importService(libName); 
         
-        // Verifica se a biblioteca foi carregada na janela e tem os comandos
         if (window[libName] && typeof window[libName].getCommands === 'function') {
             const customCommands = window[libName].getCommands();
-            // Aplica as regras de regex exclusivas da biblioteca
             customCommands.forEach(cmd => {
                 code = code.replace(cmd.regex, cmd.replace);
             });
@@ -366,10 +194,11 @@ async function runSol() {
     
     code = code.replace(/^\s*clear\s*$/gim, "logOutput.innerHTML = '';");    
     
-    // ── 3. Math ──────────────────────────────────────────────
+    // ── 3. Math (Seguro - Sem eval) ──────────────────────────
     code = code.replace(/math\((.*?)\)/ig, (_, content) => {
         let t = content.replace(/\[(.*?)\]/g, "$1").replace(/÷/g, "/").replace(/×/g, "*");
-        return `eval(\`${t}\`)`;
+        // Transpila para o JS nativo calcular de forma segura
+        return `(${t})`; 
     });
 
     // ── 4. Tempo / Data ──────────────────────────────────────
@@ -588,9 +417,9 @@ soltuxInput.addEventListener('keydown', async (e) => {
             case "/clear": soltuxDisplay.innerHTML = ""; break;
             case "/ver":
             case "/version":
-                terminalPrint("SOL Executor v1.8.6", "#00ffff");
+                terminalPrint("SOL Executor v1.8.7 (Optimized)", "#00ffff");
                 terminalPrint("Developer: AreDev", "#00ffff");
-                terminalPrint("Features: Execution Control + Smart Suggestions + Dynamic Shield", "#00bcd4");
+                terminalPrint("Features: Execution Control + Dynamic Shield (No Lag)", "#00bcd4");
                 break;
             case "/help":
                 terminalPrint("═══════════════════════════════════════", "#00ffff");
@@ -605,7 +434,6 @@ soltuxInput.addEventListener('keydown', async (e) => {
                 terminalPrint("  /load          - Load code from storage", "#fff");
                 terminalPrint("  /debug on/off  - Toggle debug mode", "#fff");
                 terminalPrint("  /export        - Export project as ZIP", "#fff");
-                terminalPrint("  /check         - Check code for errors", "#fff");
                 terminalPrint("  /stop          - Stop current execution", "#fff");
                 break;
             case "/helpsyntax": showSyntaxHelp(); break;
@@ -617,18 +445,6 @@ soltuxInput.addEventListener('keydown', async (e) => {
                 else { terminalPrint(`Debug mode is ${runtime.debugMode ? 'ON' : 'OFF'}`, "#00bcd4"); }
                 break;
             case "/export": await exportProject(); break;
-            case "/check":
-                const code = editor.innerText.trim();
-                if (!code) terminalPrint("No code to check.", "#ff9800");
-                else {
-                    const suggestions = analyzeCodeForSuggestions(code);
-                    if (suggestions.length === 0) terminalPrint("✓ No issues found!", "#4caf50");
-                    else {
-                        terminalPrint(`Found ${suggestions.length} suggestion(s):`, "#ffeb3b");
-                        for (const s of suggestions) terminalPrint(`  Line ${s.line}: ${s.message}`, "#fff");
-                    }
-                }
-                break;
             case "/stop":
                 currentExecutionId++;
                 activeExecutionId = null;
@@ -663,7 +479,7 @@ lineNumbers.addEventListener('click', (e) => {
 window.addEventListener('beforeunload', () => { if (editor.innerText.trim()) saveToLocalStorage(); });
 
 terminalPrint("═══════════════════════════════════════", "#00ffff");
-terminalPrint("  SOL EXECUTOR v1.8.6", "#fff");
+terminalPrint("  SOL EXECUTOR v1.8.7 (Optimized)", "#fff");
 terminalPrint("  Developer: AreDev", "#00bcd4");
 terminalPrint("═══════════════════════════════════════", "#00ffff");
 terminalPrint("Type /help for commands | /helpsyntax for syntax", "#bbb");
