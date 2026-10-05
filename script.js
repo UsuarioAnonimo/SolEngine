@@ -1,4 +1,4 @@
-// minha línguagem de programação - SOL ENGINE v1.9.0
+// minha línguagem de programação - Sol v1.9.0
 const PROXY_URL = "https://aredev-security.vercel.app/vercel/path0?file=";
 const CONFIG = {
     maxLogLines: 500,
@@ -9,7 +9,7 @@ const CONFIG = {
 let currentExecutionId = 0;
 let activeExecutionId = null;
 
-let consoleResolver = null;
+let conSoleReSolver = null;
 let lastTerminalLine = null;
 let executionContext = {};
 let commandHistory = [];
@@ -19,8 +19,8 @@ let autoSaveTimer = null;
 const editor = document.getElementById('code-editor');
 const lineNumbers = document.getElementById('line-numbers');
 const logOutput = document.getElementById('log-output');
-const soltuxDisplay = document.getElementById('soltux-display');
-const soltuxInput = document.getElementById('soltux-input');
+const SoltuxDisplay = document.getElementById('Soltux-display');
+const SoltuxInput = document.getElementById('Soltux-input');
 
 class SolRuntime {
     constructor() {
@@ -59,9 +59,9 @@ function switchTab(tabId) {
     const targetBtn = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
     if (targetContent) targetContent.classList.add('active');
     if (targetBtn) targetBtn.classList.add('active');
-    if (tabId === 'console' && consoleResolver) {
-        consoleResolver();
-        consoleResolver = null;
+    if (tabId === 'conSole' && conSoleReSolver) {
+        conSoleReSolver();
+        conSoleReSolver = null;
     }
 }
 
@@ -76,36 +76,36 @@ window.log = (message, color = "#4caf50") => {
     logOutput.scrollTop = logOutput.scrollHeight;
 };
 
-window.wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+window.wait = (ms) => new Promise(reSolve => setTimeout(reSolve, ms));
 
 window.input = async (prompt = "Enter value:") => {
-    return new Promise(resolve => {
+    return new Promise(reSolve => {
         log(prompt, "#00bcd4");
-        const originalResolver = consoleResolver;
-        consoleResolver = () => {
+        const originalReSolver = conSoleReSolver;
+        conSoleReSolver = () => {
             const value = window.prompt(prompt);
-            resolve(value);
-            if (originalResolver) originalResolver();
+            reSolve(value);
+            if (originalReSolver) originalReSolver();
         };
-        switchTab('console');
+        switchTab('conSole');
     });
 };
 
 window.clear = () => { logOutput.innerHTML = ""; };
-window.alert = (msg) => { log(`⚠️️ ${msg}`, "#ff9800"); };
+window.alert = (msg) => { log(`⚠ ${msg}`, "#ff9800"); };
 
 function terminalPrint(message, color = "#fff") {
     const terminalLine = document.createElement('div');
     terminalLine.style.color = color;
     terminalLine.className = 'terminal-line';
     terminalLine.innerText = message;
-    soltuxDisplay.appendChild(terminalLine);
-    soltuxDisplay.scrollTop = soltuxDisplay.scrollHeight;
+    SoltuxDisplay.appendChild(terminalLine);
+    SoltuxDisplay.scrollTop = SoltuxDisplay.scrollHeight;
 }
 
 function showSyntaxHelp() {
     terminalPrint("═══════════════════════════════════════════════════════════", "#00ffff");
-    terminalPrint("                    SOL SYNTAX REFERENCE                    ", "#fff");
+    terminalPrint("                    Sol SYNTAX REFERENCE                    ", "#fff");
     terminalPrint("═══════════════════════════════════════════════════════════", "#00ffff");
     terminalPrint("┌─ VARIABLES ─────────────────────────────────────────────┐", "#00bcd4");
     terminalPrint("│ create name              → Declare variable             │", "#fff");
@@ -128,7 +128,7 @@ async function importService(name) {
     lastTerminalLine = document.createElement('div');
     lastTerminalLine.style.color = "#00ffff";
     lastTerminalLine.className = 'loading-line';
-    soltuxDisplay.appendChild(lastTerminalLine);
+    SoltuxDisplay.appendChild(lastTerminalLine);
 
     for (let i = 0; i <= 100; i += 20) {
         lastTerminalLine.innerText = `[${name}] ${'█'.repeat(i/5)}${'░'.repeat(20-i/5)} ${i}%`;
@@ -151,7 +151,7 @@ async function importService(name) {
     }
 }
 
-window.solRequire = async function(name) {
+window.SolRequire = async function(name) {
     if (!window[name]) {
         await importService(name);
     }
@@ -163,14 +163,11 @@ async function runSol() {
     const thisExecutionId = currentExecutionId;
     activeExecutionId = thisExecutionId;
     
-    log(`🆔 Execution ID: ${thisExecutionId}`, "#9c27b0");
-    
     let code = editor.innerText.trim();
-    if (!code) { log("No code to execute.", "#ff9800"); return; }
+    if (!code) { return; }
 
-    switchTab('console');
+    switchTab('conSole');
     logOutput.innerHTML = "";
-    log("🚀 Execution started...", "#2196f3");
 
     code = code.replace(/--.*$/gm, "");
     code = code.replace(/\/\/.*$/gm, "");
@@ -188,7 +185,6 @@ async function runSol() {
             customCommands.forEach(cmd => {
                 code = code.replace(cmd.regex, cmd.replace);
             });
-            log(`🛡️ Shield adapted for library: ${libName}`, "#00bcd4");
         }
     }
     
@@ -262,8 +258,8 @@ async function runSol() {
     code = code.replace(/__NEXTLOOP__/g, "continue");
 
     code = code.replace(/(?<!await )\bwait\s*\(/g, "await wait(");
-    code = code.replace(/\bwait\s*\(\s*checkconsole\s*\)/ig, "await new Promise(r => { consoleResolver = r; })");
-    code = code.replace(/\bcheckconsole\b/ig, "switchTab('console');");
+    code = code.replace(/\bwait\s*\(\s*checkconSole\s*\)/ig, "await new Promise(r => { conSoleReSolver = r; })");
+    code = code.replace(/\bcheckconSole\b/ig, "switchTab('conSole');");
 
     code = code.replace(/\barray\s*\[(.*?)\]/ig,                   "[$1]");
     code = code.replace(/\bobject\s*\{(.*?)\}/ig,                  "{$1}");
@@ -271,7 +267,7 @@ async function runSol() {
     code = code.replace(/\bpush\s+(\w+)\s+to\s+(\w+)/ig,           "$2.push($1)");
     code = code.replace(/\bremove\s+from\s+(\w+)\s+at\s+(\d+)/ig,  "$1.splice($2, 1)");
     
-    code = code.replace(/\brequire\s*\(\s*(["'].*?["'])\s*\)/ig, "await window.solRequire($1)");
+    code = code.replace(/\brequire\s*\(\s*(["'].*?["'])\s*\)/ig, "await window.SolRequire($1)");
 
     code = code.replace(/\brandom\s+(\d+)\s+to\s+(\d+)/ig, "rng($1, $2)");
     code = code.replace(/\brandom\b/ig,                     "Math.random()");
@@ -293,15 +289,7 @@ async function runSol() {
 
     try {
         const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-        const startTime = Date.now();
         await new AsyncFunction(finalCode)();
-        
-        if (thisExecutionId === activeExecutionId) {
-            const executionTime = Date.now() - startTime;
-            log(`✓ Execution completed in ${executionTime}ms`, "#4caf50");
-        } else {
-            log(`⚠️ Execution ${thisExecutionId} was aborted`, "#ff9800");
-        }
     } catch (err) {
         if (thisExecutionId === activeExecutionId) {
             log(`✗ RUNTIME ERROR: ${err.message}`, "#f44336");
@@ -327,14 +315,14 @@ async function exportProject() {
     const zip = new JSZip();
     const code = editor.innerText;
     const metadata = { version: "2.0.0", developer: "AreDev", created: new Date().toISOString(), lines: code.split('\n').length };
-    zip.file("script.sol", code);
+    zip.file("script.Sol", code);
     zip.file("metadata.json", JSON.stringify(metadata, null, 2));
-    zip.file("README.md", `# SOL Project Export\n\nVersion: ${metadata.version}\nCreated: ${metadata.created}\nLines: ${metadata.lines}`);
+    zip.file("README.md", `# Sol Project Export\n\nVersion: ${metadata.version}\nCreated: ${metadata.created}\nLines: ${metadata.lines}`);
 
     const content = await zip.generateAsync({type:"blob"});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(content);
-    a.download = `SOL_Project_${Date.now()}.zip`;
+    a.download = `Sol_Project_${Date.now()}.zip`;
     a.click();
     terminalPrint("✓ Project exported successfully.", "#4caf50");
 }
@@ -343,7 +331,6 @@ function clearEditor() {
     if (confirm("Clear all code? This action cannot be undone.")) {
         editor.innerText = "";
         updateEditor();
-        log("Editor cleared.", "#ff9800");
     }
 }
 
@@ -354,30 +341,25 @@ function handleFile(input) {
     reader.onload = (e) => {
         editor.innerText = e.target.result;
         updateEditor();
-        log(`File loaded: ${file.name}`, "#4caf50");
     };
-    reader.onerror = () => { log("Failed to read file.", "#f44336"); };
     reader.readAsText(file);
 }
 
 function saveToLocalStorage() {
     try {
-        localStorage.setItem('sol_code', editor.innerText);
-        localStorage.setItem('sol_saved_at', new Date().toISOString());
-        terminalPrint("✓ Auto-saved to browser.", "#4caf50");
-    } catch (e) { terminalPrint("✗ Auto-save failed.", "#f44336"); }
+        localStorage.setItem('Sol_code', editor.innerText);
+        localStorage.setItem('Sol_saved_at', new Date().toISOString());
+    } catch (e) {}
 }
 
 function loadFromLocalStorage() {
     try {
-        const saved = localStorage.getItem('sol_code');
+        const saved = localStorage.getItem('Sol_code');
         if (saved) {
             editor.innerText = saved;
             updateEditor();
-            const savedAt = localStorage.getItem('sol_saved_at');
-            log(`Loaded from storage (saved: ${new Date(savedAt).toLocaleString()})`, "#00bcd4");
         }
-    } catch (e) { log("Failed to load from storage.", "#f44336"); }
+    } catch (e) {}
 }
 
 function startAutoSave() {
@@ -385,9 +367,9 @@ function startAutoSave() {
     autoSaveTimer = setInterval(saveToLocalStorage, CONFIG.autoSaveInterval);
 }
 
-soltuxInput.addEventListener('keydown', async (e) => {
+SoltuxInput.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter') {
-        const val = soltuxInput.value.trim();
+        const val = SoltuxInput.value.trim();
         if (!val) return;
 
         commandHistory.push(val);
@@ -397,7 +379,7 @@ soltuxInput.addEventListener('keydown', async (e) => {
         const cmd = parts[0];
         const args = parts.slice(1);
 
-        soltuxInput.value = "";
+        SoltuxInput.value = "";
         terminalPrint(`E:\\> ${val}`, "#fff");
 
         switch(cmd.toLowerCase()) {
@@ -405,22 +387,22 @@ soltuxInput.addEventListener('keydown', async (e) => {
                 if (args[0]) await importService(args[0]);
                 else terminalPrint("Usage: /getlib <library-name>", "#ff9800");
                 break;
-            case "/clear": soltuxDisplay.innerHTML = ""; break;
+            case "/clear": SoltuxDisplay.innerHTML = ""; break;
             case "/ver":
             case "/version":
-                terminalPrint("SOL Executor v1.9.0 (Return & Require Update)", "#00ffff");
+                terminalPrint("Sol v1.9.0 (Return & Require Update)", "#00ffff");
                 terminalPrint("Developer: AreDev", "#00ffff");
                 terminalPrint("Features: Execution Control, Modular Require, Returns", "#00bcd4");
                 break;
             case "/help":
                 terminalPrint("═══════════════════════════════════════", "#00ffff");
-                terminalPrint("        SOLTUX TERMINAL COMMANDS        ", "#fff");
+                terminalPrint("        Soltux TERMINAL COMMANDS        ", "#fff");
                 terminalPrint("═══════════════════════════════════════", "#00ffff");
                 terminalPrint("  /getlib <n>    - Load external library", "#fff");
                 terminalPrint("  /clear         - Clear terminal screen", "#fff");
                 terminalPrint("  /ver           - Show version info", "#fff");
                 terminalPrint("  /help          - Show terminal commands", "#fff");
-                terminalPrint("  /helpsyntax    - Show SOL syntax guide", "#fff");
+                terminalPrint("  /helpsyntax    - Show Sol syntax guide", "#fff");
                 terminalPrint("  /save          - Save code to browser storage", "#fff");
                 terminalPrint("  /load          - Load code from storage", "#fff");
                 terminalPrint("  /debug on/off  - Toggle debug mode", "#fff");
@@ -428,8 +410,14 @@ soltuxInput.addEventListener('keydown', async (e) => {
                 terminalPrint("  /stop          - Stop current execution", "#fff");
                 break;
             case "/helpsyntax": showSyntaxHelp(); break;
-            case "/save": saveToLocalStorage(); break;
-            case "/load": loadFromLocalStorage(); break;
+            case "/save": 
+                saveToLocalStorage(); 
+                terminalPrint("✓ Code manually saved to browser.", "#4caf50");
+                break;
+            case "/load": 
+                loadFromLocalStorage(); 
+                terminalPrint("✓ Code manually loaded from storage.", "#00bcd4");
+                break;
             case "/debug":
                 if (args[0] === "on") { runtime.debugMode = true; terminalPrint("Debug mode enabled.", "#4caf50"); } 
                 else if (args[0] === "off") { runtime.debugMode = false; terminalPrint("Debug mode disabled.", "#f44336"); } 
@@ -445,11 +433,11 @@ soltuxInput.addEventListener('keydown', async (e) => {
         }
     } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        if (historyIndex > 0) { historyIndex--; soltuxInput.value = commandHistory[historyIndex]; }
+        if (historyIndex > 0) { historyIndex--; SoltuxInput.value = commandHistory[historyIndex]; }
     } else if (e.key === 'ArrowDown') {
         e.preventDefault();
-        if (historyIndex < commandHistory.length - 1) { historyIndex++; soltuxInput.value = commandHistory[historyIndex]; } 
-        else { historyIndex = commandHistory.length; soltuxInput.value = ""; }
+        if (historyIndex < commandHistory.length - 1) { historyIndex++; SoltuxInput.value = commandHistory[historyIndex]; } 
+        else { historyIndex = commandHistory.length; SoltuxInput.value = ""; }
     }
 });
 
@@ -470,7 +458,7 @@ lineNumbers.addEventListener('click', (e) => {
 window.addEventListener('beforeunload', () => { if (editor.innerText.trim()) saveToLocalStorage(); });
 
 terminalPrint("═══════════════════════════════════════", "#00ffff");
-terminalPrint("  SOL EXECUTOR v1.9.0 (Return & Require Update)", "#fff");
+terminalPrint("  Sol v1.9.0 (Return & Require Update)", "#fff");
 terminalPrint("  Developer: AreDev", "#00bcd4");
 terminalPrint("═══════════════════════════════════════", "#00ffff");
 terminalPrint("Type /help for commands | /helpsyntax for syntax", "#bbb");
