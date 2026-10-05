@@ -1,4 +1,4 @@
-// minha línguagem de programação
+// minha línguagem de programação - SOL ENGINE v1.9.0
 const PROXY_URL = "https://aredev-security.vercel.app/vercel/path0?file=";
 const CONFIG = {
     maxLogLines: 500,
@@ -6,9 +6,6 @@ const CONFIG = {
     theme: 'dark'
 };
 
-// ═══════════════════════════════════════════════════════════════
-//  SISTEMA DE CONTROLE DE EXECUÇÃO
-// ═══════════════════════════════════════════════════════════════
 let currentExecutionId = 0;
 let activeExecutionId = null;
 
@@ -25,9 +22,6 @@ const logOutput = document.getElementById('log-output');
 const soltuxDisplay = document.getElementById('soltux-display');
 const soltuxInput = document.getElementById('soltux-input');
 
-// ═══════════════════════════════════════════════════════════════
-//  SISTEMA DE RUNTIME
-// ═══════════════════════════════════════════════════════════════
 class SolRuntime {
     constructor() {
         this.variables = new Map();
@@ -98,7 +92,7 @@ window.input = async (prompt = "Enter value:") => {
 };
 
 window.clear = () => { logOutput.innerHTML = ""; };
-window.alert = (msg) => { log(`⚠️ ${msg}`, "#ff9800"); };
+window.alert = (msg) => { log(`⚠️️ ${msg}`, "#ff9800"); };
 
 function terminalPrint(message, color = "#fff") {
     const terminalLine = document.createElement('div');
@@ -113,13 +107,17 @@ function showSyntaxHelp() {
     terminalPrint("═══════════════════════════════════════════════════════════", "#00ffff");
     terminalPrint("                    SOL SYNTAX REFERENCE                    ", "#fff");
     terminalPrint("═══════════════════════════════════════════════════════════", "#00ffff");
-    terminalPrint("┌─ VARIÁVEIS ─────────────────────────────────────────────┐", "#00bcd4");
-    terminalPrint("│ create name              → Declara variável             │", "#fff");
-    terminalPrint("│ create name = value      → Declara e atribui            │", "#fff");
-    terminalPrint("│ set name = value         → Atualiza variável            │", "#fff");
-    terminalPrint("│ delete name              → Remove variável              │", "#fff");
+    terminalPrint("┌─ VARIABLES ─────────────────────────────────────────────┐", "#00bcd4");
+    terminalPrint("│ create name              → Declare variable             │", "#fff");
+    terminalPrint("│ create name = value      → Declare and assign           │", "#fff");
+    terminalPrint("│ set name = value         → Update variable              │", "#fff");
+    terminalPrint("│ delete name              → Remove variable              │", "#fff");
+    terminalPrint("├─ FUNCTIONS & MODULES ───────────────────────────────────┤", "#00bcd4");
+    terminalPrint("│ create function name()   → Create a function            │", "#fff");
+    terminalPrint("│ return value             → Return value from function   │", "#fff");
+    terminalPrint("│ require('name')          → Import an external module    │", "#fff");
     terminalPrint("└─────────────────────────────────────────────────────────┘", "#00bcd4");
-    terminalPrint("Para comandos do terminal, digite /help", "#bbb");
+    terminalPrint("For terminal commands, type /help", "#bbb");
 }
 
 async function importService(name) {
@@ -153,9 +151,13 @@ async function importService(name) {
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  TRANSPILADOR SOL → JAVASCRIPT (SEGURO E OTIMIZADO)
-// ═══════════════════════════════════════════════════════════════
+window.solRequire = async function(name) {
+    if (!window[name]) {
+        await importService(name);
+    }
+    return window[name] || {};
+};
+
 async function runSol() {
     currentExecutionId++;
     const thisExecutionId = currentExecutionId;
@@ -170,12 +172,10 @@ async function runSol() {
     logOutput.innerHTML = "";
     log("🚀 Execution started...", "#2196f3");
 
-    // ── 1. Remove comentários ──────────────
     code = code.replace(/--.*$/gm, "");
     code = code.replace(/\/\/.*$/gm, "");
     code = code.replace(/\/\*[\s\S]*?\*\//g, "");
 
-    // ── 2. Imports e KIT ANTI-SOCO (Escudo Dinâmico) ───────────
     const importRegex = /importService\s*\(\s*["'](.*?)["']\s*\)/ig;
     const importMatches = [...code.matchAll(importRegex)];
     
@@ -188,20 +188,17 @@ async function runSol() {
             customCommands.forEach(cmd => {
                 code = code.replace(cmd.regex, cmd.replace);
             });
-            log(`🛡️ Escudo adaptado para a biblioteca: ${libName}`, "#00bcd4");
+            log(`🛡️ Shield adapted for library: ${libName}`, "#00bcd4");
         }
     }
     
     code = code.replace(/^\s*clear\s*$/gim, "logOutput.innerHTML = '';");    
     
-    // ── 3. Math (Seguro - Sem eval) ──────────────────────────
     code = code.replace(/math\((.*?)\)/ig, (_, content) => {
         let t = content.replace(/\[(.*?)\]/g, "$1").replace(/÷/g, "/").replace(/×/g, "*");
-        // Transpila para o JS nativo calcular de forma segura
         return `(${t})`; 
     });
 
-    // ── 4. Tempo / Data ──────────────────────────────────────
     code = code.replace(/\bhour\b/ig,      "(new Date().getHours())");
     code = code.replace(/\bminutes\b/ig,   "(new Date().getMinutes())");
     code = code.replace(/\bseconds\b/ig,   "(new Date().getSeconds())");
@@ -210,19 +207,19 @@ async function runSol() {
     code = code.replace(/\byear\b/ig,      "(new Date().getFullYear())");
     code = code.replace(/\btimestamp\b/ig, "(Date.now())");
 
-    // ── 5. FUNÇÕES ───────────────────────────────────────────
     code = code.replace(/\bcreate\s+function\s+(\w+)\s*\(\s*(.*?)\s*\)/ig, "var $1 = async function($2) {");
     code = code.replace(/\bcreate\s+function\s+(\w+)/ig, "var $1 = async function() {");
     code = code.replace(/\bset\s+function\s+(\w+)\s*\(\s*(.*?)\s*\)/ig, "$1 = async function($2) {");
     code = code.replace(/\bset\s+function\s+(\w+)/ig, "$1 = async function() {");
 
-    // ── 6. VARIÁVEIS ─────────────────────────────────────────
+    code = code.replace(/\breturn\s+(.+)$/gim, "return $1;");
+    code = code.replace(/^\s*\breturn\b\s*$/gim, "return;");
+
     code = code.replace(/\bcreate\s+(\w+)\s*=\s*/ig, "var $1 = ");
     code = code.replace(/\bcreate\s+(\w+)\s*$/img,   "var $1");
     code = code.replace(/\bset\s+(\w+)\s*=\s*/ig,    "$1 = ");
     code = code.replace(/\bdelete\s+(\w+)/ig,         "$1 = undefined");
 
-    // ── 7. CONDICIONAIS ──────────────────────────────────────
     function mapOp(op) {
         if (op.trim() === "=")  return "===";
         if (op.trim() === "!=") return "!==";
@@ -250,7 +247,6 @@ async function runSol() {
     });
     code = code.replace(/\belse\b/ig, "} else {");
 
-    // ── 8. LOOPS COM VERIFICAÇÃO DE EXECUÇÃO ────────────────
     const executionCheck = `if(__execId !== ${thisExecutionId}) break;`;
     code = code.replace(/\bloop\s*\(?\s*\)?\s*(?=\s|$)/ig, `while(true) { ${executionCheck}`);
     code = code.replace(/\brepeat\s+(\d+)\s+times\b/ig, `for(let __i=0; __i<$1; __i++) { ${executionCheck}`);
@@ -258,32 +254,28 @@ async function runSol() {
     code = code.replace(/\bstoploop\b/ig, "__STOPLOOP__");
     code = code.replace(/\bnextloop\b/ig, "__NEXTLOOP__");
 
-    // ── 9. execute() ────────────────────────────────────────
     code = code.replace(/\bexecute\s*\(\s*(\w+\s*\(.*?\))\s*\)/ig, "await $1");
     code = code.replace(/\bexecute\s*\(\s*(\w+)\s*\)/ig,            "await $1()");
 
-    // ── 10. BREAK = FECHAMENTO UNIVERSAL ─────────────────────
     code = code.replace(/^\s*\bbreak\b\s*$/img, "}");
     code = code.replace(/__STOPLOOP__/g, "break");
     code = code.replace(/__NEXTLOOP__/g, "continue");
 
-    // ── 11. wait() & checkconsole ────────────────────────────
     code = code.replace(/(?<!await )\bwait\s*\(/g, "await wait(");
     code = code.replace(/\bwait\s*\(\s*checkconsole\s*\)/ig, "await new Promise(r => { consoleResolver = r; })");
     code = code.replace(/\bcheckconsole\b/ig, "switchTab('console');");
 
-    // ── 12. Arrays / Objetos / Utilitários ───────────────────
     code = code.replace(/\barray\s*\[(.*?)\]/ig,                   "[$1]");
     code = code.replace(/\bobject\s*\{(.*?)\}/ig,                  "{$1}");
     code = code.replace(/\blength\s+of\s+(\w+)/ig,                 "$1.length");
     code = code.replace(/\bpush\s+(\w+)\s+to\s+(\w+)/ig,           "$2.push($1)");
     code = code.replace(/\bremove\s+from\s+(\w+)\s+at\s+(\d+)/ig,  "$1.splice($2, 1)");
+    
+    code = code.replace(/\brequire\s*\(\s*(["'].*?["'])\s*\)/ig, "await window.solRequire($1)");
 
-    // ── 13. Random ───────────────────────────────────────────
     code = code.replace(/\brandom\s+(\d+)\s+to\s+(\d+)/ig, "rng($1, $2)");
     code = code.replace(/\brandom\b/ig,                     "Math.random()");
 
-    // ── 14. Helpers injetados no contexto ────────────────────
     const helpers = `
         const __execId = ${thisExecutionId};
         const rng     = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -299,7 +291,6 @@ async function runSol() {
 
     const finalCode = `${helpers}\n${code}`;
 
-    // ── 15. Execução ─────────────────────────────────────────
     try {
         const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
         const startTime = Date.now();
@@ -319,11 +310,11 @@ async function runSol() {
             for (const line of stackLines) {
                 const match = line.match(/<anonymous>:(\d+):/);
                 if (match) {
-                    lineInfo = ` (próximo à linha ${Math.max(1, parseInt(match[1]) - helpers.split('\n').length)})`;
+                    lineInfo = ` (near line ${Math.max(1, parseInt(match[1]) - helpers.split('\n').length)})`;
                     break;
                 }
             }
-            log(`📍 Localização${lineInfo}`, "#ff9800");
+            log(`📍 Location${lineInfo}`, "#ff9800");
         }
     }
 }
@@ -417,9 +408,9 @@ soltuxInput.addEventListener('keydown', async (e) => {
             case "/clear": soltuxDisplay.innerHTML = ""; break;
             case "/ver":
             case "/version":
-                terminalPrint("SOL Executor v1.8.7 (Optimized)", "#00ffff");
+                terminalPrint("SOL Executor v1.9.0 (Return & Require Update)", "#00ffff");
                 terminalPrint("Developer: AreDev", "#00ffff");
-                terminalPrint("Features: Execution Control + Dynamic Shield (No Lag)", "#00bcd4");
+                terminalPrint("Features: Execution Control, Modular Require, Returns", "#00bcd4");
                 break;
             case "/help":
                 terminalPrint("═══════════════════════════════════════", "#00ffff");
@@ -479,7 +470,7 @@ lineNumbers.addEventListener('click', (e) => {
 window.addEventListener('beforeunload', () => { if (editor.innerText.trim()) saveToLocalStorage(); });
 
 terminalPrint("═══════════════════════════════════════", "#00ffff");
-terminalPrint("  SOL EXECUTOR v1.8.7 (Optimized)", "#fff");
+terminalPrint("  SOL EXECUTOR v1.9.0 (Return & Require Update)", "#fff");
 terminalPrint("  Developer: AreDev", "#00bcd4");
 terminalPrint("═══════════════════════════════════════", "#00ffff");
 terminalPrint("Type /help for commands | /helpsyntax for syntax", "#bbb");
