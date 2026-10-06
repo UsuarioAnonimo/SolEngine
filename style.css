@@ -1,0 +1,103 @@
+/* RESET E ESTRUTURA DARK */
+* { box-sizing: border-box; }
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #0a0a0a;
+    color: #eee;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+button, select, input {
+    font-family: inherit;
+}
+.main-header { padding: 15px; background: #000; border-bottom: 2px solid #1a1a1a; text-align: center; }
+.logo { font-weight: bold; font-size: 1.4em; letter-spacing: 2px; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+.dev-info { font-size: 0.75em; color: #666; margin-top: 5px; }
+
+.tab-menu { display: flex; background: #111; border-bottom: 1px solid #333; }
+.tab-btn {
+    flex: 1; padding: 12px; background: none; border: none; color: #888; font-weight: bold;
+    cursor: pointer; transition: 0.3s; text-transform: uppercase; font-size: 0.85em;
+}
+.tab-btn.active { background: #1a1a1a; color: #00ffff; border-bottom: 2px solid #00ffff; }
+
+.main-content {
+    flex: 1; display: flex; position: relative; overflow: hidden; background: #000; min-height: 0;
+}
+.workspace-area { flex: 1; display: flex; min-width: 0; min-height: 0; }
+.content { display: none; width: 100%; height: 100%; flex-direction: column; }
+.content.active { display: flex; }
+
+#code-editor {
+    flex: 1; overflow-y: auto; overflow-x: auto; white-space: pre; padding: 20px; background: #0f0f0f;
+    color: #d4d4d4; font-family: 'Consolas', 'Monaco', monospace; font-size: 14px; line-height: 1.5; outline: none; border: none;
+}
+.editor-footer {
+    display: flex; gap: 8px; padding: 12px; background: #111; border-top: 1px solid #222; flex-shrink: 0; flex-wrap: wrap;
+}
+.action-btn {
+    flex: 1; min-width: 110px; padding: 10px; background: #1a1a1a; color: #fff; border: 1px solid #333;
+    border-radius: 4px; font-weight: bold; font-size: 0.75em; cursor: pointer; transition: 0.2s;
+}
+.action-btn:active { transform: scale(0.95); background: #222; }
+.action-btn.red { background: #c0392b; border: none; color: #fff; box-shadow: 0 0 10px rgba(192,57,43,0.3); }
+
+#log-output, #soltux-display {
+    flex: 1; overflow-y: auto; padding: 15px; background: #000; color: #00ff00; font-family: 'Courier New', monospace; font-size: 13px;
+}
+#soltux-input {
+    width: 100%; padding: 12px; background: #050505; border: none; border-top: 1px solid #1a1a1a; color: #00ffff; font-family: monospace; outline: none;
+}
+
+.project-explorer {
+    width: 290px; background: #0a0a0a; border-right: 1px solid #1a1a1a; display: flex; flex-direction: column; transition: transform 0.2s ease; z-index: 12;
+}
+.explorer-header {
+    display: flex; align-items: center; justify-content: space-between; padding: 12px 12px 10px; background: #111; border-bottom: 1px solid #1d1d1d;
+}
+.explorer-title { font-weight: bold; letter-spacing: 1px; text-transform: uppercase; color: #00ffff; font-size: 0.8em; }
+.explorer-close {
+    background: transparent; color: #ddd; border: 1px solid #333; width: 32px; height: 32px; border-radius: 4px; cursor: pointer;
+}
+.project-panel { padding: 12px; border-bottom: 1px solid #1a1a1a; background: #0d0d0d; }
+.project-label { display: block; font-size: 0.72em; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+.project-select {
+    width: 100%; background: #111; color: #fff; border: 1px solid #333; border-radius: 4px; padding: 8px; outline: none;
+}
+.project-actions, .explorer-toolbar { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.small-btn {
+    flex: 1; min-width: 70px; padding: 8px 10px; background: #1a1a1a; color: #fff; border: 1px solid #333; border-radius: 4px; cursor: pointer; font-size: 0.72em; font-weight: bold; text-transform: uppercase;
+}
+.small-btn.danger { background: #3b1917; border-color: #7a2d2d; color: #ff8a80; }
+.explorer-toolbar { padding: 10px 12px; border-bottom: 1px solid #1a1a1a; background: #101010; }
+.project-tree { flex: 1; overflow-y: auto; padding: 10px 8px 18px; color: #d7d7d7; }
+.explorer-node { margin-bottom: 2px; }
+.explorer-row {
+    display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 4px; cursor: pointer; color: #e8e8e8; user-select: none;
+}
+.explorer-row:hover { background: rgba(255,255,255,0.03); }
+.explorer-row.selected { background: rgba(0,255,255,0.08); border: 1px solid rgba(0,255,255,0.25); }
+.explorer-toggle { width: 16px; text-align: center; color: #888; font-size: 0.8em; display: inline-block; }
+.explorer-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.explorer-actions { display: flex; gap: 4px; opacity: 0.75; }
+.explorer-actions button {
+    background: transparent; border: 1px solid #303030; color: #bbb; width: 20px; height: 20px; border-radius: 3px; cursor: pointer; font-size: 0.75em; padding: 0;
+}
+.explorer-child-list { margin-left: 10px; padding-left: 10px; border-left: 1px solid rgba(255,255,255,0.06); }
+.file-icon, .folder-icon { color: #00ffff; font-size: 0.82em; }
+.explorer-row.folder-row .folder-icon { color: #ffc857; }
+.explorer-row.file-row .file-icon { color: #7dd3fc; }
+.empty-state { padding: 14px 10px; color: #777; font-size: 0.8em; }
+
+@media (max-width: 768px) {
+    .project-explorer {
+        position: absolute; left: 0; top: 0; bottom: 0; width: min(82vw, 320px); transform: translateX(-105%); box-shadow: 4px 0 24px rgba(0,0,0,0.6);
+    }
+    .project-explorer.open { transform: translateX(0); }
+    .workspace-area { width: 100%; }
+    .action-btn { min-width: 0; flex: 1 1 42%; }
+}
